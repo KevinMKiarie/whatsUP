@@ -8,3 +8,5 @@ prisma/migrations/
 generated/
 *.pdf
 /tmp/
+
+commit.bash
