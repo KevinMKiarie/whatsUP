@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.next/
+.turbo/
+*.env
+!.env.example
+prisma/migrations/
+generated/
+*.pdf
+/tmp/

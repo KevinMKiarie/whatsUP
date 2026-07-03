@@ -1,0 +1,222 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Business {
+  id               String           @id @default(cuid())
+  name             String
+  phone            String           @unique
+  slug             String           @unique
+  category         String           @default("salon")
+  address          String?
+  description      String?
+  logoUrl          String?
+  services         Service[]
+  bookings         Booking[]
+  ratings          Rating[]
+  invoiceTemplate  InvoiceTemplate?
+  broadcasts       Broadcast[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model Service {
+  id              String    @id @default(cuid())
+  business        Business  @relation(fields: [businessId], references: [id])
+  businessId      String
+  name            String
+  durationMinutes Int
+  price           Decimal   @db.Decimal(10, 2)
+  bookings        Booking[]
+  createdAt       DateTime  @default(now())
+}
+
+model Client {
+  id           String        @id @default(cuid())
+  phone        String        @unique
+  name         String?
+  bookings     Booking[]
+  ratings      Rating[]
+  conversation Conversation?
+  createdAt    DateTime      @default(now())
+}
+
+model Booking {
+  id          String        @id @default(cuid())
+  business    Business      @relation(fields: [businessId], references: [id])
+  businessId  String
+  client      Client        @relation(fields: [clientId], references: [id])
+  clientId    String
+  service     Service       @relation(fields: [serviceId], references: [id])
+  serviceId   String
+  scheduledAt DateTime
+  status      BookingStatus @default(PENDING)
+  invoice     Invoice?
+  rating      Rating?
+  createdAt   DateTime      @default(now())
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model Invoice {
+  id        String    @id @default(cuid())
+  booking   Booking   @relation(fields: [bookingId], references: [id])
+  bookingId String    @unique
+  amount    Decimal   @db.Decimal(10, 2)
+  pdfUrl    String?
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Rating {
+  id           String   @id @default(cuid())
+  booking      Booking  @relation(fields: [bookingId], references: [id])
+  bookingId    String   @unique
+  business     Business @relation(fields: [businessId], references: [id])
+  businessId   String
+  client       Client   @relation(fields: [clientId], references: [id])
+  clientId     String
+  score        Int
+  comment      String?
+  googleSynced Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+model Conversation {
+  id         String   @id @default(cuid())
+  client     Client   @relation(fields: [clientId], references: [id])
+  clientId   String   @unique
+  businessId String
+  state      String   @default("IDLE")
+  draft      Json?
+  messages   Json     @default("[]")
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+}
+
+model InvoiceTemplate {
+  id           String   @id @default(cuid())
+  business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId   String   @unique
+  accentColor  String   @default("#FF9500")
+  logoUrl      String?
+  businessName String?
+  tagline      String?
+  footerText   String?
+  showLogo     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Broadcast {
+  id           String          @id @default(cuid())
+  business     Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId   String
+  name         String
+  message      String
+  audienceKey  String          @default("all")
+  repeatType   BroadcastRepeat @default(ONCE)
+  scheduleDays String[]        @default([])
+  scheduleTime String          @default("10:00")
+  oneOffDate   DateTime?
+  nextFireAt   DateTime?
+  status       BroadcastStatus @default(DRAFT)
+  sentCount    Int             @default(0)
+  repliedCount Int             @default(0)
+  logs         BroadcastLog[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+enum BroadcastRepeat {
+  ONCE
+  WEEKLY
+}
+
+enum BroadcastStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  PAUSED
+}
+
+model BroadcastLog {
+  id          String    @id @default(cuid())
+  broadcast   Broadcast @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+  broadcastId String
+  clientPhone String
+  message     String
+  status      String    @default("pending")
+  sentAt      DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  sessions      Session[]
+  accounts      Account[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
