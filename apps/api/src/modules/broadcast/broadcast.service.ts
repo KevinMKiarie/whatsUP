@@ -46,6 +46,7 @@ export class BroadcastService {
         scheduleDays: dto.scheduleDays ?? [],
         scheduleTime: dto.scheduleTime ?? '10:00',
         oneOffDate:   dto.oneOffDate ? new Date(dto.oneOffDate) : null,
+        customPhones: dto.customPhones ?? [],
       },
     });
   }
@@ -96,7 +97,7 @@ export class BroadcastService {
     const bc = await this.prisma.broadcast.findUnique({ where: { id } });
     if (!bc) throw new NotFoundException(`Broadcast ${id} not found`);
 
-    const phones = await this.resolveAudience(businessId, bc.audienceKey as AudienceKey);
+    const phones = await this.resolveAudience(businessId, bc.audienceKey as AudienceKey, bc.customPhones as string[]);
     return this.dispatch(bc, phones);
   }
 
@@ -115,7 +116,7 @@ export class BroadcastService {
     for (const bc of due) {
       this.logger.log(`Firing broadcast ${bc.id} — ${bc.name}`);
       try {
-        const phones = await this.resolveAudience(bc.businessId, bc.audienceKey as AudienceKey);
+        const phones = await this.resolveAudience(bc.businessId, bc.audienceKey as AudienceKey, bc.customPhones as string[]);
         await this.dispatch(bc, phones);
 
         if (bc.repeatType === 'WEEKLY') {
@@ -138,7 +139,7 @@ export class BroadcastService {
 
   /* ── Audience resolution ───────────────────────────────────── */
 
-  private async resolveAudience(businessId: string, key: AudienceKey): Promise<string[]> {
+  private async resolveAudience(businessId: string, key: AudienceKey, customPhones: string[] = []): Promise<string[]> {
     const now    = new Date();
     const ago30  = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const week   = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -209,6 +210,9 @@ export class BroadcastService {
         });
         return rows.map(r => r.phone);
       }
+
+      case 'custom':
+        return customPhones;
 
       default:
         return [];

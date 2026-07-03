@@ -59,3 +59,60 @@ export function fetchWhatsappStatus() {
 export function fetchWhatsappQr() {
   return apiFetch<{ qr?: string; state: string }>('/whatsapp/qr');
 }
+
+export type AudienceKey = 'all' | 'pending' | 'confirmed' | 'completed_30d' | 'inactive_30d' | 'vip';
+
+export interface Broadcast {
+  id: string;
+  name: string;
+  message: string;
+  audienceKey: AudienceKey;
+  repeatType: 'ONCE' | 'WEEKLY';
+  scheduleDays: string[];
+  scheduleTime: string;
+  oneOffDate: string | null;
+  status: 'DRAFT' | 'SCHEDULED' | 'SENDING' | 'SENT' | 'PAUSED';
+  sentCount: number;
+  nextFireAt: string | null;
+  createdAt: string;
+  _count?: { logs: number };
+}
+
+export interface Client {
+  id: string;
+  name: string | null;
+  phone: string;
+}
+
+export function fetchClients(businessId: string, q?: string) {
+  const qs = q ? `&q=${encodeURIComponent(q)}` : '';
+  return apiFetch<Client[]>(`/businesses/clients?businessId=${businessId}${qs}`);
+}
+
+export function fetchBroadcasts(businessId: string) {
+  return apiFetch<Broadcast[]>(`/broadcasts?businessId=${businessId}`);
+}
+
+export async function createBroadcast(businessId: string, dto: {
+  name: string; message: string; audienceKey: AudienceKey;
+  repeatType: 'ONCE' | 'WEEKLY'; scheduleDays?: string[];
+  scheduleTime?: string; oneOffDate?: string; customPhones?: string[];
+}): Promise<Broadcast> {
+  const res = await fetch(`${API_BASE}/broadcasts?businessId=${businessId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dto),
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  return res.json();
+}
+
+export async function scheduleBroadcast(id: string): Promise<Broadcast> {
+  const res = await fetch(`${API_BASE}/broadcasts/${id}/schedule`, { method: 'POST' });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  return res.json();
+}
+
+export async function deleteBroadcast(id: string): Promise<void> {
+  await fetch(`${API_BASE}/broadcasts/${id}`, { method: 'DELETE' });
+}

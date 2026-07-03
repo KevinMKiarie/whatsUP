@@ -9,7 +9,8 @@ export type AudienceKey =
   | 'confirmed'
   | 'completed_30d'
   | 'inactive_30d'
-  | 'vip';
+  | 'vip'
+  | 'custom';
 
 export class CreateBroadcastDto {
   @IsString() @IsNotEmpty()
@@ -18,8 +19,11 @@ export class CreateBroadcastDto {
   @IsString() @IsNotEmpty()
   message: string;
 
-  @IsIn(['all', 'pending', 'confirmed', 'completed_30d', 'inactive_30d', 'vip'])
+  @IsIn(['all', 'pending', 'confirmed', 'completed_30d', 'inactive_30d', 'vip', 'custom'])
   audienceKey: AudienceKey;
+
+  @IsOptional() @IsArray() @IsString({ each: true })
+  customPhones?: string[];
 
   @IsEnum(['ONCE', 'WEEKLY'])
   repeatType: 'ONCE' | 'WEEKLY';
@@ -37,8 +41,10 @@ export class CreateBroadcastDto {
 export class UpdateBroadcastDto {
   @IsOptional() @IsString() name?: string;
   @IsOptional() @IsString() message?: string;
-  @IsOptional() @IsIn(['all', 'pending', 'confirmed', 'completed_30d', 'inactive_30d', 'vip'])
+  @IsOptional() @IsIn(['all', 'pending', 'confirmed', 'completed_30d', 'inactive_30d', 'vip', 'custom'])
   audienceKey?: AudienceKey;
+  @IsOptional() @IsArray() @IsString({ each: true })
+  customPhones?: string[];
   @IsOptional() @IsEnum(['ONCE', 'WEEKLY']) repeatType?: 'ONCE' | 'WEEKLY';
   @IsOptional() @IsArray() @IsString({ each: true }) scheduleDays?: string[];
   @IsOptional() @Matches(/^\d{2}:\d{2}$/) scheduleTime?: string;

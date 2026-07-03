@@ -80,9 +80,9 @@ export default function WhatsAppPage() {
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [fetchStatus]);
 
-  // Auto-load QR when state is 'close'
+  // Auto-load QR when state is 'close' or 'connecting'
   useEffect(() => {
-    if (status?.state === 'close') fetchQr();
+    if (status?.state === 'close' || status?.state === 'connecting') fetchQr();
   }, [status?.state, fetchQr]);
 
   async function handleCreateInstance() {
@@ -188,7 +188,7 @@ export default function WhatsAppPage() {
       )}
 
       {/* QR Code section */}
-      {state === 'close' && (
+      {(state === 'close' || state === 'connecting') && (
         <div className="rounded-2xl border border-black/[0.06] bg-white p-5 space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-[13px] font-medium text-[#1C1C1E]">Scan QR code</p>

@@ -9,6 +9,7 @@ COPY packages/shared/package.json   ./packages/shared/
 COPY packages/whatsapp/package.json ./packages/whatsapp/
 COPY packages/db/package.json       ./packages/db/
 COPY apps/api/package.json          ./apps/api/
+RUN echo "dangerously-allow-all-builds=true" >> .npmrc
 RUN pnpm install --frozen-lockfile
 
 # ── Build ─────────────────────────────────────────────────────

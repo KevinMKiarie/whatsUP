@@ -1,5 +1,5 @@
 import {
-  Body, Controller, Get, Param, Patch, Query,
+  Body, Controller, Get, Param, Patch, Post, Query,
 } from '@nestjs/common';
 import { BookingStatus } from '@whatsup/db';
 import { BookingsService } from './bookings.service';
@@ -11,6 +11,16 @@ export class BookingsController {
   @Get()
   list(@Query('businessId') businessId: string) {
     return this.bookings.listByBusiness(businessId);
+  }
+
+  @Post()
+  create(@Body() body: { businessId: string; clientPhone: string; serviceId: string; scheduledAt: string }) {
+    return this.bookings.create({
+      businessId:  body.businessId,
+      clientPhone: body.clientPhone,
+      serviceId:   body.serviceId,
+      scheduledAt: new Date(body.scheduledAt),
+    });
   }
 
   @Get('analytics')

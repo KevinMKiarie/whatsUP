@@ -130,9 +130,10 @@ model Broadcast {
   scheduleTime String          @default("10:00")
   oneOffDate   DateTime?
   nextFireAt   DateTime?
-  status       BroadcastStatus @default(DRAFT)
-  sentCount    Int             @default(0)
-  repliedCount Int             @default(0)
+  status        BroadcastStatus @default(DRAFT)
+  customPhones  String[]        @default([])
+  sentCount     Int             @default(0)
+  repliedCount  Int             @default(0)
   logs         BroadcastLog[]
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
